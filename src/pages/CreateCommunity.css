@@ -1,0 +1,220 @@
+/* ── Create Community Page ── */
+.create-wrapper {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.create-title {
+  font-size: var(--font-size-4xl);
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: var(--space-3);
+}
+
+.create-subtitle {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-10);
+}
+
+/* ── Steps ── */
+.steps-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: var(--space-10);
+}
+
+.step-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.step-dot span {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-bg-glass);
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  transition: all var(--transition-base);
+}
+
+.step-dot.active span {
+  background: var(--gradient-primary);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+}
+
+.step-dot label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.step-dot.active label {
+  color: var(--color-text-accent);
+}
+
+.step-line {
+  width: 60px;
+  height: 2px;
+  background: var(--color-border);
+  margin: 0 var(--space-2);
+  margin-bottom: 22px;
+}
+
+/* ── Step Content ── */
+.create-step {
+  padding: var(--space-8);
+  animation: slideUp 300ms ease;
+}
+
+.create-step:hover {
+  transform: none;
+}
+
+.step-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin-bottom: var(--space-6);
+}
+
+/* ── Token Mode Selector ── */
+.token-mode-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.token-mode-btn {
+  padding: var(--space-5);
+  background: var(--color-bg-glass);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  transition: all var(--transition-base);
+  font-family: var(--font-family);
+}
+
+.token-mode-btn:hover {
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.token-mode-btn.active {
+  border-color: var(--color-purple);
+  background: rgba(124, 58, 237, 0.08);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
+}
+
+.token-mode-icon {
+  font-size: 24px;
+}
+
+.token-mode-label {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.token-mode-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── Era Card ── */
+.era-card {
+  padding: var(--space-5);
+  background: var(--color-bg-glass);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+}
+
+.era-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-accent);
+}
+
+.era-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.era-fields .input-group:last-child {
+  grid-column: 1 / -1;
+}
+
+/* ── Confirm Summary ── */
+.confirm-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.confirm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.confirm-row:last-child {
+  border-bottom: none;
+}
+
+.confirm-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.confirm-value {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .token-mode-selector {
+    grid-template-columns: 1fr;
+  }
+
+  .era-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .era-fields .input-group:last-child {
+    grid-column: auto;
+  }
+}
