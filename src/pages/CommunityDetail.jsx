@@ -38,6 +38,7 @@ export default function CommunityDetail() {
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState('pools');
   const [retainedRevenue, setRetainedRevenue] = useState(null);
+  const [showFeeRatioPopover, setShowFeeRatioPopover] = useState(false);
 
   const communityContract = useCommunityRead(address);
   const linearCalc = useLinearCalculator();
@@ -253,9 +254,67 @@ export default function CommunityDetail() {
             <span className="info-label">Owner</span>
             <span className="info-value" style={{ fontFamily: 'monospace' }}>{shortenAddress(community.owner?.id)}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Fee Ratio</span>
+          <div className="info-item" style={{ position: 'relative' }}>
+            <span className="info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Fee Ratio
+              <span
+                onClick={() => setShowFeeRatioPopover(!showFeeRatioPopover)}
+                style={{
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  opacity: 0.8,
+                  userSelect: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  width: '14px',
+                  height: '14px',
+                  borderRadius: '50%',
+                  lineHeight: 1
+                }}
+                title="Click for details"
+              >
+                ⓘ
+              </span>
+            </span>
             <span className="info-value">{((community.feeRatio || 0) / 100).toFixed(1)}%</span>
+
+            {showFeeRatioPopover && (
+              <div 
+                className="glass-card" 
+                style={{ 
+                  position: 'absolute', 
+                  top: '100%', 
+                  left: 0, 
+                  marginTop: '8px', 
+                  padding: '12px', 
+                  borderRadius: '8px', 
+                  zIndex: 100, 
+                  width: '240px',
+                  fontSize: '12px',
+                  lineHeight: '1.4',
+                  background: 'rgba(15, 15, 25, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                  backdropFilter: 'blur(12px)',
+                  color: 'rgba(230, 230, 250, 0.9)'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', fontWeight: 600, color: 'var(--color-text-accent)' }}>
+                  <span>Fee Ratio (手续费比例)</span>
+                  <button 
+                    onClick={() => setShowFeeRatioPopover(false)}
+                    style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: '14px', padding: 0 }}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div style={{ textTransform: 'none', letterSpacing: 'normal', fontWeight: 'normal' }}>
+                  分发资金将以一定比例进入到DAO基金地址中
+                </div>
+              </div>
+            )}
           </div>
           <div className="info-item">
             <span className="info-label">Reward Rate</span>
@@ -303,7 +362,7 @@ export default function CommunityDetail() {
             Active Pools ({activePools.length})
           </button>
           <button className={`tab ${activeTab === 'devfund' ? 'active' : ''}`} onClick={() => setActiveTab('devfund')}>
-            Dev Fund
+            DAO Fund
           </button>
           <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>
             History
@@ -315,11 +374,11 @@ export default function CommunityDetail() {
         ) : activeTab === 'devfund' ? (
           <div className="devfund-panel glass-card" style={{ padding: 'var(--space-6)', marginTop: 'var(--space-4)' }}>
             <h4 style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--font-size-lg)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              💻 Developer Fund Info
+              🏛️ DAO Fund Info
             </h4>
             <div className="devfund-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-4)' }}>
               <div className="devfund-item glass-card" style={{ padding: 'var(--space-4)', background: 'rgba(255,255,255,0.02)' }}>
-                <span style={{ fontSize: 'var(--font-size-xs)', opacity: 0.6, display: 'block', marginBottom: 'var(--space-1)' }}>Dev Fund Address</span>
+                <span style={{ fontSize: 'var(--font-size-xs)', opacity: 0.6, display: 'block', marginBottom: 'var(--space-1)' }}>DAO Fund Address</span>
                 <span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 'var(--font-size-sm)', wordBreak: 'break-all' }}>
                   {community.daoFund ? (
                     <a href={getBscScanUrl(community.daoFund)} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)' }}>

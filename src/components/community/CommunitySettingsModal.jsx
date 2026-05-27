@@ -54,14 +54,14 @@ export default function CommunitySettingsModal({ communityAddress, community, on
       const communityContract = new ethers.Contract(communityAddress, CommunityABI, signer);
       
       const tx = await communityContract.adminSetDev(devFund);
-      toast.info('Updating Dev Fund address...');
+      toast.info('Updating DAO Fund address...');
       await tx.wait();
       
-      toast.success('Dev Fund address updated successfully!');
+      toast.success('DAO Fund address updated successfully!');
       onSuccess?.();
     } catch (err) {
-      console.error('Update Dev Fund failed:', err);
-      toast.error(err.reason || err.message || 'Failed to update Dev Fund');
+      console.error('Update DAO Fund failed:', err);
+      toast.error(err.reason || err.message || 'Failed to update DAO Fund');
     } finally {
       setDevLoading(false);
     }
@@ -108,16 +108,16 @@ export default function CommunitySettingsModal({ communityAddress, community, on
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-          {/* Section 1: Developer Fund Address */}
+          {/* Section 1: DAO Fund Address */}
           <div className="glass-card" style={{ padding: 'var(--space-4)', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)' }}>
             <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, marginBottom: 'var(--space-3)', color: 'var(--color-primary)' }}>
-              💻 Dev Fund Wallet
+              🏛️ DAO Fund Wallet
             </h3>
             <p style={{ fontSize: 'var(--font-size-xs)', opacity: 0.7, marginBottom: 'var(--space-3)' }}>
-              Change the address where developer fund revenues are withdrawn.
+              Change the address where DAO fund revenues are withdrawn.
             </p>
             <div className="input-group" style={{ marginBottom: 'var(--space-4)' }}>
-              <label>Dev Fund Address</label>
+              <label>DAO Fund Address</label>
               <input
                 className="input"
                 placeholder="0x..."
@@ -136,7 +136,7 @@ export default function CommunitySettingsModal({ communityAddress, community, on
               {devLoading ? (
                 <><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Saving...</>
               ) : (
-                'Update Dev Fund'
+                'Update DAO Fund'
               )}
             </button>
           </div>
@@ -147,7 +147,7 @@ export default function CommunitySettingsModal({ communityAddress, community, on
               💰 Fee Ratio
             </h3>
             <p style={{ fontSize: 'var(--font-size-xs)', opacity: 0.7, marginBottom: 'var(--space-3)' }}>
-              Change the percentage of community rewards allocated to the Dev Fund.
+              Change the percentage of community rewards allocated to the DAO Fund.
             </p>
             <div className="input-group" style={{ marginBottom: 'var(--space-4)' }}>
               <label>
