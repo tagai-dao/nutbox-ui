@@ -16,6 +16,7 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^6.30.3",
+    "recharts": "^2.15.0",
     "viem": "^2.48.11",
     "wagmi": "^2.19.5"
   },

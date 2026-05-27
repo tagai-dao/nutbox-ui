@@ -87,6 +87,15 @@ export const LinearCalculatorABI = [
   'function distributionErasMap(address, uint256) view returns (uint256 amount, uint256 startCursor, uint256 stopCursor)',
 ];
 
+export const HourlyTickCalculatorABI = [
+  'function rewardHead() view returns (uint256)',
+  'function getCurrentRewardRate(address community) view returns (uint256)',
+  'function getStartCursor(address community) view returns (uint256)',
+  'function getHourlyRewards(address community, uint256 startTimestamp, uint256 numHours) view returns (uint256[])',
+  'function totalInjected(address) view returns (uint256)',
+  'function registered(address) view returns (bool)',
+];
+
 export const MintableERC20FactoryABI = [
   'function createCommunityToken(bytes meta) returns (address)',
 ];

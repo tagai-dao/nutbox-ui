@@ -4,12 +4,23 @@ import { ethers } from 'ethers';
 import { fetchCommunity } from '../config/subgraph';
 import { useWeb3 } from '../contexts/Web3Context';
 import { useToast } from '../contexts/ToastContext';
-import { useCommunity, useCommunityRead, useCommittee, useLinearCalculator, useERC20Read } from '../hooks/useContract';
+import {
+  useCommunity,
+  useCommunityRead,
+  useCommittee,
+  useLinearCalculator,
+  useLinearTimeCalculator,
+  useHourlyTickCalculator,
+  useERC20Read
+} from '../hooks/useContract';
 import { CONTRACTS, BLOCKS_PER_YEAR } from '../config/contracts';
 import { ERC20StakingABI, ERC20LockingABI, ERC20ABI } from '../config/abis';
 import { formatTokenAmount, shortenAddress, formatDate, formatDuration, getPoolTypeLabel, getPoolTypeBadgeClass, getBscScanUrl, copyToClipboard } from '../utils/helpers';
 import PoolCard from '../components/pool/PoolCard';
 import AddPoolModal from '../components/community/AddPoolModal';
+import AdjustRatiosModal from '../components/community/AdjustRatiosModal';
+import CommunitySettingsModal from '../components/community/CommunitySettingsModal';
+import DistributionDisplay from '../components/community/DistributionDisplay';
 import './CommunityDetail.css';
 
 export default function CommunityDetail() {
@@ -21,11 +32,17 @@ export default function CommunityDetail() {
   const [loading, setLoading] = useState(true);
   const [tokenInfo, setTokenInfo] = useState(null);
   const [rewardRate, setRewardRate] = useState(null);
+  const [rewardRateUnit, setRewardRateUnit] = useState('/block');
   const [showAddPool, setShowAddPool] = useState(false);
+  const [showAdjustRatios, setShowAdjustRatios] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState('pools');
+  const [retainedRevenue, setRetainedRevenue] = useState(null);
 
   const communityContract = useCommunityRead(address);
-  const calculator = useLinearCalculator();
+  const linearCalc = useLinearCalculator();
+  const linearTimeCalc = useLinearTimeCalculator();
+  const hourlyCalc = useHourlyTickCalculator();
 
   // Load community data from subgraph
   const loadCommunity = useCallback(async () => {
@@ -44,13 +61,54 @@ export default function CommunityDetail() {
         setTokenInfo({ name, symbol, decimals: Number(decimals), address: data.cToken });
       }
 
-      // Load reward rate
-      if (calculator) {
+      // Load reward rate by detecting calculator type
+      if (communityContract) {
         try {
-          const rate = await calculator.getCurrentRewardRate(address);
+          const calcAddr = await communityContract.rewardCalculator();
+          const calcAddrLower = calcAddr.toLowerCase();
+          
+          let rate = 0n;
+          let unit = '/block';
+          
+          if (calcAddrLower === CONTRACTS.LinearCalculator.toLowerCase()) {
+            if (linearCalc) {
+              rate = await linearCalc.getCurrentRewardRate(address);
+            }
+            unit = '/block';
+          } else if (calcAddrLower === CONTRACTS.LinearTimeCalculator.toLowerCase()) {
+            if (linearTimeCalc) {
+              rate = await linearTimeCalc.getCurrentRewardRate(address);
+            }
+            unit = '/sec';
+          } else if (calcAddrLower === CONTRACTS.HourlyTickCalculator.toLowerCase()) {
+            if (hourlyCalc) {
+              rate = await hourlyCalc.getCurrentRewardRate(address);
+            }
+            unit = '/hour';
+          } else {
+            // Default fallback
+            if (linearCalc) {
+              rate = await linearCalc.getCurrentRewardRate(address);
+            }
+          }
+          
           setRewardRate(rate);
-        } catch {
+          setRewardRateUnit(unit);
+        } catch (err) {
+          console.error('Failed to load reward rate from calculator:', err);
           setRewardRate(0n);
+          setRewardRateUnit('/block');
+        }
+      }
+
+      // Load retained revenue from storage slot 5 on-chain
+      if (readProvider && address) {
+        try {
+          const rawVal = await readProvider.getStorage(address, 5);
+          setRetainedRevenue(rawVal ? BigInt(rawVal) : 0n);
+        } catch (err) {
+          console.error('Failed to read retainedRevenue from storage:', err);
+          setRetainedRevenue(0n);
         }
       }
     } catch (err) {
@@ -59,7 +117,7 @@ export default function CommunityDetail() {
     } finally {
       setLoading(false);
     }
-  }, [address, readProvider, calculator]);
+  }, [address, readProvider, communityContract, linearCalc, linearTimeCalc, hourlyCalc]);
 
   useEffect(() => {
     loadCommunity();
@@ -110,9 +168,7 @@ export default function CommunityDetail() {
   }
 
   const activePools = community.pools?.filter(p => p.status === 'OPENED') || [];
-  const closedPools = community.pools?.filter(p => p.status === 'CLOSED') || [];
-  // Only show ERC20 staking & locking pools
-  const displayPools = activeTab === 'pools' ? activePools : closedPools;
+  const displayPools = activePools;
   const erc20Pools = displayPools.filter(p =>
     p.poolType === 'ERC20_STAKING' || p.poolType === 'ERC20_LOCKING'
   );
@@ -174,6 +230,26 @@ export default function CommunityDetail() {
             </span>
           </div>
           <div className="info-item">
+            <span className="info-label">Token Address</span>
+            <span className="info-value ctoken-address">
+              <a
+                href={getBscScanUrl(community.cToken)}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontFamily: 'monospace', fontSize: 'var(--font-size-xs)' }}
+              >
+                {shortenAddress(community.cToken, 6)}
+              </a>
+              <button
+                className="copy-btn"
+                onClick={(e) => { e.stopPropagation(); copyToClipboard(community.cToken); toast.info('Token address copied!'); }}
+                title="Copy token address"
+              >
+                📋
+              </button>
+            </span>
+          </div>
+          <div className="info-item">
             <span className="info-label">Owner</span>
             <span className="info-value" style={{ fontFamily: 'monospace' }}>{shortenAddress(community.owner?.id)}</span>
           </div>
@@ -184,16 +260,8 @@ export default function CommunityDetail() {
           <div className="info-item">
             <span className="info-label">Reward Rate</span>
             <span className="info-value">
-              {rewardRate !== null ? `${formatTokenAmount(rewardRate, tokenInfo?.decimals || 18, 4)}/block` : '...'}
+              {rewardRate !== null ? `${formatTokenAmount(rewardRate, tokenInfo?.decimals || 18, 4)}${rewardRateUnit}` : '...'}
             </span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">Active Pools</span>
-            <span className="info-value">{community.activePoolCount || 0}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">Users</span>
-            <span className="info-value">{community.usersCount || 0}</span>
           </div>
         </div>
 
@@ -207,6 +275,12 @@ export default function CommunityDetail() {
               <button className="btn btn-primary btn-sm" onClick={() => setShowAddPool(true)}>
                 + Add Pool
               </button>
+              <button className="btn btn-warning btn-sm" onClick={() => setShowAdjustRatios(true)}>
+                📐 Adjust Pool Ratios
+              </button>
+              <button className="btn btn-info btn-sm" onClick={() => setShowSettings(true)}>
+                ⚙️ Community Settings
+              </button>
               <button className="btn btn-success btn-sm" onClick={handleWithdrawRevenue}>
                 Withdraw Revenue
               </button>
@@ -215,14 +289,21 @@ export default function CommunityDetail() {
         )}
       </div>
 
+      {/* ── Distribution Display (inline) ── */}
+      <DistributionDisplay
+        communityAddress={address}
+        tokenInfo={tokenInfo}
+        community={community}
+      />
+
       {/* ── Pools Section ── */}
       <div style={{ marginTop: 'var(--space-8)' }}>
         <div className="tabs">
           <button className={`tab ${activeTab === 'pools' ? 'active' : ''}`} onClick={() => setActiveTab('pools')}>
             Active Pools ({activePools.length})
           </button>
-          <button className={`tab ${activeTab === 'closed' ? 'active' : ''}`} onClick={() => setActiveTab('closed')}>
-            Closed ({closedPools.length})
+          <button className={`tab ${activeTab === 'devfund' ? 'active' : ''}`} onClick={() => setActiveTab('devfund')}>
+            Dev Fund
           </button>
           <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>
             History
@@ -231,14 +312,53 @@ export default function CommunityDetail() {
 
         {activeTab === 'history' ? (
           <HistoryTab operations={community.operationHistory} />
+        ) : activeTab === 'devfund' ? (
+          <div className="devfund-panel glass-card" style={{ padding: 'var(--space-6)', marginTop: 'var(--space-4)' }}>
+            <h4 style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--font-size-lg)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              💻 Developer Fund Info
+            </h4>
+            <div className="devfund-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-4)' }}>
+              <div className="devfund-item glass-card" style={{ padding: 'var(--space-4)', background: 'rgba(255,255,255,0.02)' }}>
+                <span style={{ fontSize: 'var(--font-size-xs)', opacity: 0.6, display: 'block', marginBottom: 'var(--space-1)' }}>Dev Fund Address</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 'var(--font-size-sm)', wordBreak: 'break-all' }}>
+                  {community.daoFund ? (
+                    <a href={getBscScanUrl(community.daoFund)} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)' }}>
+                      {community.daoFund}
+                    </a>
+                  ) : (
+                    'Not Set'
+                  )}
+                </span>
+              </div>
+              <div className="devfund-item glass-card" style={{ padding: 'var(--space-4)', background: 'rgba(255,255,255,0.02)' }}>
+                <span style={{ fontSize: 'var(--font-size-xs)', opacity: 0.6, display: 'block', marginBottom: 'var(--space-1)' }}>Fee Ratio</span>
+                <span style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)' }}>
+                  {((community.feeRatio || 0) / 100).toFixed(1)}%
+                </span>
+              </div>
+              <div className="devfund-item glass-card" style={{ padding: 'var(--space-4)', background: 'rgba(255,255,255,0.02)' }}>
+                <span style={{ fontSize: 'var(--font-size-xs)', opacity: 0.6, display: 'block', marginBottom: 'var(--space-1)' }}>Pending Rewards</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'var(--space-1)', gap: 8 }}>
+                  <span style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)', color: 'var(--color-success)' }}>
+                    {retainedRevenue !== null ? `${formatTokenAmount(retainedRevenue, tokenInfo?.decimals || 18, 4)} ${tokenInfo?.symbol || 'tokens'}` : '...'}
+                  </span>
+                  {retainedRevenue > 0n && (
+                    <button className="btn btn-success btn-xs" onClick={handleWithdrawRevenue} style={{ padding: '2px 8px', fontSize: 11 }}>
+                      Claim Revenue
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         ) : erc20Pools.length === 0 && otherPools.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">📭</div>
-            <div className="empty-state-title">No {activeTab === 'closed' ? 'closed' : 'active'} pools</div>
+            <div className="empty-state-title">No active pools</div>
             <div className="empty-state-desc">
-              {activeTab === 'pools' && isOwner ? 'Create your first staking pool!' : 'No pools to display.'}
+              {isOwner ? 'Create your first staking pool!' : 'No pools to display.'}
             </div>
-            {activeTab === 'pools' && isOwner && (
+            {isOwner && (
               <button className="btn btn-primary" onClick={() => setShowAddPool(true)}>+ Add Pool</button>
             )}
           </div>
@@ -277,6 +397,26 @@ export default function CommunityDetail() {
           activePools={activePools}
           onClose={() => setShowAddPool(false)}
           onSuccess={() => { setShowAddPool(false); loadCommunity(); }}
+        />
+      )}
+
+      {/* ── Adjust Pool Ratios Modal ── */}
+      {showAdjustRatios && (
+        <AdjustRatiosModal
+          communityAddress={address}
+          activePools={activePools}
+          onClose={() => setShowAdjustRatios(false)}
+          onSuccess={() => { setShowAdjustRatios(false); loadCommunity(); }}
+        />
+      )}
+
+      {/* ── Community Settings Modal ── */}
+      {showSettings && (
+        <CommunitySettingsModal
+          communityAddress={address}
+          community={community}
+          onClose={() => setShowSettings(false)}
+          onSuccess={() => { setShowSettings(false); loadCommunity(); }}
         />
       )}
     </div>

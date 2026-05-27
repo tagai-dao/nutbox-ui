@@ -12,6 +12,7 @@ export const CONTRACTS = {
   SocialCurationFactory: '0xc4674D3fBbD201Ea401a8B7e7285F956178593D8',
   LinearCalculator: '0x5114966657Bd6209B47aa16eaa4EAfbbC9595ec0',
   LinearTimeCalculator: '0xc76e00e150e13EC95514E9a52Ab0314c7faE8207',
+  HourlyTickCalculator: '0x6cCEC02E7D371FED954D7D16eCb7F2f57cccF54d',
 };
 
 export const BSC_CONFIG = {
@@ -29,6 +30,7 @@ export const BSC_CONFIG = {
 // BSC block time ~3s => ~10,512,000 blocks/year
 export const BLOCKS_PER_YEAR = 10_512_000;
 export const BLOCK_TIME_SECONDS = 3;
+export const SECONDS_PER_YEAR = 31_536_000;
 
 // Subgraph endpoint (The Graph Studio)
 // NOTE: Replace with your actual API key endpoint when available

@@ -9,6 +9,7 @@ import {
   ERC20StakingABI,
   ERC20LockingABI,
   LinearCalculatorABI,
+  HourlyTickCalculatorABI,
   ERC20ABI,
 } from '../config/abis';
 
@@ -70,6 +71,14 @@ export function useERC20Locking(address) {
 
 export function useLinearCalculator() {
   return useReadContract(CONTRACTS.LinearCalculator, LinearCalculatorABI);
+}
+
+export function useLinearTimeCalculator() {
+  return useReadContract(CONTRACTS.LinearTimeCalculator, LinearCalculatorABI);
+}
+
+export function useHourlyTickCalculator() {
+  return useReadContract(CONTRACTS.HourlyTickCalculator, HourlyTickCalculatorABI);
 }
 
 export function useERC20(address) {

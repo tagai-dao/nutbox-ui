@@ -124,6 +124,27 @@
   color: var(--color-text-primary);
 }
 
+.ctoken-address {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+  padding: 0;
+  line-height: 1;
+}
+
+.copy-btn:hover {
+  opacity: 1;
+}
+
 /* ── Admin Panel ── */
 .admin-panel {
   margin-top: var(--space-6);
