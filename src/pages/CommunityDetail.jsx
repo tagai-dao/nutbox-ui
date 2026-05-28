@@ -513,7 +513,18 @@ function HistoryTab({ operations }) {
           <div className="history-details">
             <span className="history-account">{shortenAddress(op.account?.id)}</span>
             {op.amount && op.amount !== '0' && (
-              <span className="history-amount">{formatTokenAmount(op.amount)} tokens</span>
+              <span className="history-amount">
+                {(() => {
+                  const num = parseFloat(op.amount);
+                  if (isNaN(num)) return '0';
+                  if (num === 0) return '0';
+                  if (num < 0.0001) return '<0.0001';
+                  return num.toLocaleString('en-US', {
+                    maximumFractionDigits: 4,
+                    minimumFractionDigits: 0
+                  });
+                })()} tokens
+              </span>
             )}
           </div>
           <div className="history-meta">
