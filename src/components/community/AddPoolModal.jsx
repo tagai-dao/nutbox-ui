@@ -4,6 +4,7 @@ import { useWeb3 } from '../../contexts/Web3Context';
 import { useToast } from '../../contexts/ToastContext';
 import { CONTRACTS } from '../../config/contracts';
 import { CommunityABI } from '../../config/abis';
+import { getPoolTypeLabel, getPoolTypeBadgeClass } from '../../utils/helpers';
 
 export default function AddPoolModal({ communityAddress, activePools, onClose, onSuccess }) {
   const { signer, readProvider } = useWeb3();
@@ -155,6 +156,34 @@ export default function AddPoolModal({ communityAddress, activePools, onClose, o
                 onChange={e => setLockDuration(e.target.value)}
                 min="1"
               />
+            </div>
+          )}
+
+          {/* Current Pools & Ratios */}
+          {activePools && activePools.length > 0 && (
+            <div className="glass-card" style={{ padding: 'var(--space-4)', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px' }}>
+              <h3 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                📊 Current Pools & Ratios ({activePools.length})
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', maxHeight: '150px', overflowY: 'auto', paddingRight: '4px' }}>
+                {activePools.map((pool, idx) => (
+                  <div key={pool.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--font-size-sm)', padding: 'var(--space-2) var(--space-3)', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.02)', borderRadius: '6px' }}>
+                    <span style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>#{idx + 1}</span>
+                      {pool.name || `Pool #${idx + 1}`}
+                      <span className={getPoolTypeBadgeClass(pool.poolType)} style={{ fontSize: '10px', padding: '1px 6px', height: 'auto', lineHeight: 'normal' }}>
+                        {getPoolTypeLabel(pool.poolType)}
+                      </span>
+                    </span>
+                    <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
+                      {((pool.ratio || 0) / 100).toFixed(1)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)', lineHeight: 1.4 }}>
+                💡 <strong>Ratio input guideline</strong>: Enter ratios corresponding to pools #1 to #{activePools.length} in order, plus the new pool as the last value (e.g. <code>3000, 3000, 4000</code>).
+              </div>
             </div>
           )}
 
