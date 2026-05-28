@@ -493,6 +493,56 @@ export default function CommunityDetail() {
   );
 }
 
+function getOperationDisplay(type) {
+  const t = (type || '').toUpperCase().replace(/_/g, '');
+  
+  // Admin Operations
+  if (t === 'ADMINSETDEV' || t === 'ADMINSETDAOFUND' || t === 'DEVCHANGED') {
+    return { label: 'Change Fund Address', isAdmin: true };
+  }
+  if (t === 'ADMINSETFEERATIO') {
+    return { label: 'Change Fund Ratio', isAdmin: true };
+  }
+  if (t === 'ADMINADDPOOL') {
+    return { label: 'Add Pool', isAdmin: true };
+  }
+  if (t === 'ADMINCLOSEPOOL') {
+    return { label: 'Close Pool', isAdmin: true };
+  }
+  if (t === 'ADMINSETPOOLRATIOS' || t === 'ADMINSETPOOLRATIO') {
+    return { label: 'Adjust Pool Ratios', isAdmin: true };
+  }
+  if (t === 'ADMINWITHDRAWREVENUE' || t === 'REVENUEWITHDRAWN' || t === 'WITHDRAWREVENUE') {
+    return { label: 'Claim Revenue', isAdmin: true };
+  }
+  
+  // User/Normal Operations
+  if (t === 'DEPOSIT' || t === 'STAKE' || t === 'LOCKED' || t === 'LOCK') {
+    return { label: 'Stake', isAdmin: false };
+  }
+  if (t === 'WITHDRAW' || t === 'UNSTAKE' || t === 'UNLOCKED' || t === 'UNLOCK') {
+    return { label: 'Withdraw', isAdmin: false };
+  }
+  if (t === 'REDEEM' || t === 'REDEEMED') {
+    return { label: 'Redeem', isAdmin: false };
+  }
+  if (t === 'WITHDRAWREWARDS' || t === 'CLAIM' || t === 'HARVEST' || t === 'CLAIMREWARDS') {
+    return { label: 'Claim Rewards', isAdmin: false };
+  }
+  if (t === 'SOCIALCLAIMED' || t === 'CLAIMED') {
+    return { label: 'Social Claim', isAdmin: false };
+  }
+  
+  // Fallback: If type contains 'ADMIN', it is admin operation
+  const isFallbackAdmin = t.includes('ADMIN');
+  const formattedLabel = (type || '')
+    .split(/[_-]/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+
+  return { label: formattedLabel, isAdmin: isFallbackAdmin };
+}
+
 function HistoryTab({ operations }) {
   if (!operations || operations.length === 0) {
     return (
@@ -505,36 +555,42 @@ function HistoryTab({ operations }) {
 
   return (
     <div className="history-list">
-      {operations.map(op => (
-        <div key={op.id} className="history-item glass-card">
-          <div className="history-type">
-            <span className="badge badge-staking">{op.type}</span>
-          </div>
-          <div className="history-details">
-            <span className="history-account">{shortenAddress(op.account?.id)}</span>
-            {op.amount && op.amount !== '0' && (
-              <span className="history-amount">
-                {(() => {
-                  const num = parseFloat(op.amount);
-                  if (isNaN(num)) return '0';
-                  if (num === 0) return '0';
-                  if (num < 0.0001) return '<0.0001';
-                  return num.toLocaleString('en-US', {
-                    maximumFractionDigits: 4,
-                    minimumFractionDigits: 0
-                  });
-                })()} tokens
+      {operations.map(op => {
+        const opInfo = getOperationDisplay(op.type);
+        return (
+          <div key={op.id} className="history-item glass-card">
+            <div className="history-type">
+              <span className={`badge ${opInfo.isAdmin ? 'badge-admin' : 'badge-staking'}`}>
+                {opInfo.label}
+                {opInfo.isAdmin && <span style={{ marginLeft: 4, fontSize: 10 }}>👑</span>}
               </span>
-            )}
+            </div>
+            <div className="history-details">
+              <span className="history-account">{shortenAddress(op.account?.id)}</span>
+              {op.amount && op.amount !== '0' && (
+                <span className="history-amount">
+                  {(() => {
+                    const num = parseFloat(op.amount);
+                    if (isNaN(num)) return '0';
+                    if (num === 0) return '0';
+                    if (num < 0.0001) return '<0.0001';
+                    return num.toLocaleString('en-US', {
+                      maximumFractionDigits: 4,
+                      minimumFractionDigits: 0
+                    });
+                  })()} tokens
+                </span>
+              )}
+            </div>
+            <div className="history-meta">
+              <span>{formatDate(op.timestamp)}</span>
+              <a href={getBscScanUrl(op.tx, 'tx')} target="_blank" rel="noopener noreferrer" className="history-tx">
+                {shortenAddress(op.tx, 6)} ↗
+              </a>
+            </div>
           </div>
-          <div className="history-meta">
-            <span>{formatDate(op.timestamp)}</span>
-            <a href={getBscScanUrl(op.tx, 'tx')} target="_blank" rel="noopener noreferrer" className="history-tx">
-              {shortenAddress(op.tx, 6)} ↗
-            </a>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
