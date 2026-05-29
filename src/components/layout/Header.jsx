@@ -12,19 +12,13 @@ export default function Header() {
     <header className="header">
       <div className="container header-inner">
         <Link to="/" className="header-logo">
-          <div className="logo-icon">
-            <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
-              <defs>
-                <linearGradient id="logoGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#7c3aed"/>
-                  <stop offset="50%" stopColor="#3b82f6"/>
-                  <stop offset="100%" stopColor="#06b6d4"/>
-                </linearGradient>
-              </defs>
-              <rect width="64" height="64" rx="14" fill="url(#logoGrad)"/>
-              <text x="32" y="44" textAnchor="middle" fontFamily="Inter,sans-serif" fontWeight="800" fontSize="32" fill="white">N</text>
-            </svg>
-          </div>
+          <img
+            src="/logo_small.png"
+            alt="Nutbox"
+            className="logo-icon"
+            width={28}
+            height={28}
+          />
           <span className="logo-text">Nutbox</span>
         </Link>
 

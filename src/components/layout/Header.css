@@ -25,8 +25,10 @@
 }
 
 .logo-icon {
-  display: flex;
-  align-items: center;
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
   transition: transform var(--transition-base);
 }
 
